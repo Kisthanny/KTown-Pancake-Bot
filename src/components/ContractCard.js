@@ -1,0 +1,225 @@
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import Checkbox from '@mui/material/Checkbox';
+import Button from '@mui/material/Button';
+import ButtonGroup from '@mui/material/ButtonGroup';
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
+import CardActions from '@mui/material/CardActions';
+import Divider from '@mui/material/Divider';
+import Popover from '@mui/material/Popover';
+import Backdrop from '@mui/material/Backdrop';
+import { ApproveButton } from "./Buttons/ApproveButton"
+import { DepositButton } from "./Buttons/DepositButton.js"
+import { WithdrawButton } from "./Buttons/WithdrawButton.js"
+import { useState } from "react";
+import { CardContent, Typography } from '@mui/material';
+import { useNotification } from './Notification/NotificationProvider';
+
+function not(a, b) {
+    return a.filter((value) => b.indexOf(value) === -1);
+}
+
+function intersection(a, b) {
+    return a.filter((value) => b.indexOf(value) !== -1);
+}
+
+function union(a, b) {
+    return [...a, ...not(b, a)];
+}
+export function ContractCard(props) {
+    const addNotification = useNotification()
+    const { contract, symbol, wallet } = props
+    const [checked, setChecked] = useState(wallet);
+    const [anchorEl, setAnchorEl] = useState(null);
+    const [type, setType] = useState("")
+
+    const open = Boolean(anchorEl);
+    const id = open ? 'transact-popover' : undefined;
+
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
+    const handleOpen = (event) => {
+        setAnchorEl(event.currentTarget);
+        setType(event.currentTarget.id)
+        //setType(_type)
+    }
+    const handleTransact = () => {
+        switch (type) {
+            case "Approve_all":
+                approveAllHandler()
+                break;
+            case "Deposit_all":
+                depositAllHandler()
+                break;
+            case "Withdraw_all":
+                withdrawAllHandler()
+                break
+            default:
+                break;
+        }
+        handleClose()
+        addNotification("info", "please wait till all transaction are done...", 10000)
+    }
+    const handleToggle = (value) => () => {
+        const currentIndex = checked.indexOf(value);
+        const newChecked = [...checked];
+
+        if (currentIndex === -1) {
+            newChecked.push(value);
+        } else {
+            newChecked.splice(currentIndex, 1);
+        }
+
+        setChecked(newChecked);
+    };
+    const numberOfChecked = (items) => intersection(checked, items).length;
+    const handleToggleAll = (items) => () => {
+        if (numberOfChecked(items) === items.length) {
+            setChecked(not(checked, items));
+        } else {
+            setChecked(union(checked, items));
+        }
+    }
+
+    async function approveAllHandler() {
+        const elements = document.getElementsByClassName("approveButton")
+        for (let index = 0; index < elements.length; index++) {
+            const element = elements[index];
+
+            element.click()
+        }
+    }
+    async function depositAllHandler() {
+        const elements = document.getElementsByClassName("depositButton")
+        for (let index = 0; index < elements.length; index++) {
+            const element = elements[index];
+
+            element.click()
+        }
+    }
+    async function withdrawAllHandler() {
+        const elements = document.getElementsByClassName("withdrawButton")
+        for (let index = 0; index < elements.length; index++) {
+            const element = elements[index];
+
+            element.click()
+        }
+    }
+    return (
+        <List sx={{ width: 800, maxWidth: 1080, bgcolor: 'background.paper' }}>
+            <ListItemText
+                primary={symbol}
+                secondary={contract.options.address}
+                sx={{ pl: 5 }}
+            />
+            <Box
+                sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    '& > *': {
+                        m: 1,
+                    },
+                }}
+            >
+                <ButtonGroup variant="outlined" aria-label="multiple transact group">
+                    <Button id="Approve_all" onClick={handleOpen}>Approve Selected</Button>
+                    <Button id="Deposit_all" onClick={handleOpen}>Stake Selected</Button>
+                    <Button id="Withdraw_all" onClick={handleOpen}>Withdraw Selected</Button>
+                </ButtonGroup>
+                <Popover
+                    id={id}
+                    open={open}
+                    anchorEl={anchorEl}
+                    anchorReference="anchorEl"
+                    anchorPosition={{ top: 300, left: 300 }}
+                    onClose={handleClose}
+                >
+                    <Box>
+                        <Card>
+                            <CardHeader
+                                sx={{ px: 2, py: 1 }}
+                                title={`Sure to ${type}?`}
+                            />
+                        </Card>
+                        <CardContent>
+                            <Typography variant='h6'>
+                                {symbol}
+                            </Typography>
+                            <Typography variant="subtitle2">
+                                {contract.options.address}
+                            </Typography>
+                            <Typography variant='h6'>
+                                {`${numberOfChecked(wallet)} accounts`}
+                            </Typography>
+                        </CardContent>
+                        <CardActions>
+                            <Button variant="outlined" color="success" onClick={handleTransact}>yes, proceed</Button>
+                            <Button variant="outlined" color="error" onClick={handleClose}>No, cancel</Button>
+                        </CardActions>
+                    </Box>
+                </Popover>
+                <Backdrop
+                    sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+                    open={open}
+                />
+            </Box>
+            <ListItem>
+                <CardHeader
+                    sx={{ px: 2, py: 1 }}
+                    avatar={
+                        <Checkbox
+                            onClick={handleToggleAll(wallet)}
+                            edge="start"
+                            checked={numberOfChecked(wallet) === wallet.length && wallet.length !== 0}
+                            indeterminate={
+                                numberOfChecked(wallet) !== wallet.length && numberOfChecked(wallet) !== 0
+                            }
+                            disabled={wallet.length === 0}
+                            inputProps={{
+                                'aria-label': 'all accounts selected',
+                            }}
+                        />
+                    }
+                    title="Select Multiple"
+                    subheader={`${numberOfChecked(wallet)}/${wallet.length} selected`}
+                />
+            </ListItem>
+            <Divider />
+            {wallet.map(account => {
+                return (
+                    <ListItem
+                        key={account.address}
+                        secondaryAction={
+                            <ButtonGroup edge="end" variant="outlined" size="small" color="secondary" aria-label="single transact group">
+                                <ApproveButton account={account} spender_contract={contract} />
+                                <DepositButton account={account} spender_contract={contract} />
+                                <WithdrawButton account={account} spender_contract={contract} />
+                            </ButtonGroup>
+                        }
+                    >
+                        <ListItemButton role={undefined} onClick={handleToggle(account)} dense>
+                            <ListItemIcon>
+                                <Checkbox
+                                    edge="start"
+                                    checked={checked.indexOf(account) !== -1}
+                                    tabIndex={-1}
+                                    disableRipple
+                                    inputProps={{ 'aria-labelledby': account.address }}
+                                />
+                            </ListItemIcon>
+                            <ListItemText id={account.address} primary={account.address} />
+
+                        </ListItemButton>
+                    </ListItem>
+                )
+            })}
+        </List>
+    )
+}
