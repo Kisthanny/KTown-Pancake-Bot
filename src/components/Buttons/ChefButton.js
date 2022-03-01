@@ -90,6 +90,10 @@ export const ChefButton = (props) => {
     }
 
     useEffect(() => {
+        if (localStorage.getItem("pancake_chef_address") == "" || localStorage.getItem("pancake_chef_address") == undefined) {
+            setChefAddress("0xFfF5812C35eC100dF51D5C9842e8cC3fe60f9ad7")
+            localStorage.setItem("pancake_chef_address", "0xFfF5812C35eC100dF51D5C9842e8cC3fe60f9ad7")
+        }
         setChefAddress(localStorage.getItem("pancake_chef_address"))
     }, [])
     return (
