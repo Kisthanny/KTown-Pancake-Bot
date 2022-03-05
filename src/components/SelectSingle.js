@@ -4,12 +4,12 @@ import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
-import { getWallet } from "../data";
+import { getPrivateWallet } from "../data";
 
 export default function SelectSingle(props) {
     const { dispatch } = props
-    const wallet_list = getWallet()
-    const address_list = wallet_list.map(account => {
+    const privateWallet_list = getPrivateWallet()
+    const address_list = privateWallet_list.map(account => {
         return account.address
     })
     const [account, setAccount] = useState('');
@@ -19,7 +19,7 @@ export default function SelectSingle(props) {
         setAccount(address)
         dispatch({
             type: "SET_SINGLE",
-            payload: wallet_list[address_list.indexOf(address)]
+            payload: privateWallet_list[address_list.indexOf(address)]
         })
     };
 

@@ -65,7 +65,7 @@ export const AddContractForm = (props) => {
                 anchorPosition={{ top: 100, left: 200 }}
             >
                 <Box sx={{ borderBottom: 1, borderColor: 'divider', m: 2 }}>
-                    <ChefButton updateLocalStorage={updateLocalStorage} />
+                    <ChefButton addContract={addContract} />
                     <TextField
                         value={contractAddress}
                         onChange={inputHandler}

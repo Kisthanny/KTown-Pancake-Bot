@@ -1,6 +1,6 @@
 import List from '@mui/material/List';
 import Box from '@mui/material/Box';
-import { useState, useEffect } from "react";
+import { useState, useEffect, useReducer } from "react";
 import Web3 from "web3";
 import SYRUP from "../contracts/abi/SYRUP.json";
 import IFOPOOL from "../contracts/abi/IFOPOOL.json";
@@ -11,10 +11,19 @@ import { useNotification } from './Notification/NotificationProvider';
 const web3 = new Web3(window.ethereum)
 export const ContractTable = (props) => {
     const addNotification = useNotification()
-    const { wallet } = props
-    const [contracts, setContracts] = useState([])
+    const { privateWallet } = props
+    const [contracts, contractDispatch] = useReducer((contracts, action) => {
+        switch (action.type) {
+            case "ADD_CONTRACT":
+                return [...contracts, { ...action.payload }]
+            case "DELETE_CONTRACT":
+                return contracts.filter(contract => contract.options.address != action.address)
+            default:
+                return contracts
+        }
+    }, [])
 
-    const updateLocalStorage = (contractAddress, name = 'test_Contract') => {
+    const updateLocalStorage = (contractAddress, name = 'KTown-Contracts') => {
         if (!localStorage.getItem(name)) {
             localStorage.setItem(name, JSON.stringify([contractAddress]))
         } else {
@@ -25,18 +34,16 @@ export const ContractTable = (props) => {
             }
         }
     }
-    const addContract = (address, loop = false) => {
+    const addContract = (address, mute = false) => {
         if (!web3.utils.isAddress(address)) {
-            addNotification("error", "please input correct form of contract address", 5000)
+            if (!mute) { addNotification("error", "please input correct form of contract address", 6000) }
             return null
         }
-        let copy = [...contracts]
-        for (let index = 0; index < copy.length; index++) {
-            const element = copy[index];
-            if (element.options.address == address) {
-                addNotification("warning", "already added contract")
-                return null
-            }
+        address = web3.utils.toHex(address)
+        //contract already added
+        if (contracts.filter(contract => contract.options.address.toLowerCase() == address).length > 0) {
+            if (!mute) { addNotification("warning", "contract already exist", 6000) }
+            return null
         }
         var contract
         if (address == '0x1B2A2f6ed4A1401E8C73B4c2B6172455ce2f78E8') {
@@ -45,51 +52,45 @@ export const ContractTable = (props) => {
             contract = new web3.eth.Contract(AUTOCAKE, address)
         } else if (address == '0x73feaa1eE314F8c655E354234017bE2193C9E24E') {
             // do not support manual pool
-            addNotification("warning", "we do not support Manual Cake pool", 6000)
+            if (!mute) { addNotification("warning", "we do not support Manual Cake pool", 6000) }
             return null
         } else {
             try {
                 contract = new web3.eth.Contract(SYRUP, address)
             } catch {
-                addNotification("error", "please input correct form of contract address", 5000)
+                if (!mute) { addNotification("error", "please input correct form of contract address", 6000) }
                 return null
             }
         }
-        if (!loop) {
-            setContracts([...contracts, contract])
-        }
         updateLocalStorage(address)
+        contractDispatch({
+            type: "ADD_CONTRACT",
+            payload: contract
+        })
         return true
     }
 
     //contract, storageName = 'test_Contract'
-    const deleteContract = (contract, storageName = 'test_Contract') => {
+    const deleteContract = (contract, storageName = 'KTown-Contracts') => {
         let contract_arr = JSON.parse(localStorage.getItem(storageName))
         contract_arr.splice(contract_arr.indexOf(contract.options.address.toLowerCase()), 1)
         localStorage.setItem(storageName, JSON.stringify(contract_arr))
-        let copy = [...contracts]
-        copy.splice(copy.indexOf(contract), 1)
-        setContracts(copy)
+        contractDispatch({
+            type: "DELETE_CONTRACT",
+            address: contract.options.address
+        })
         addNotification("info", `${contract.options.address} removed`)
     }
     useEffect(() => {
-        //localStorage.removeItem('test_Contract')
-        const contractArr = JSON.parse(localStorage.getItem('test_Contract'))
+        localStorage.removeItem('test_Contract')
+        const contractArr = JSON.parse(localStorage.getItem('KTown-Contracts'))
         if (!contractArr) {
             return null
+        } else {
+            contractArr.forEach(address => {
+                addContract(address, true)
+            });
         }
-        let contract_list = []
-        for (let index = 0; index < contractArr.length; index++) {
-            const address = contractArr[index];
-            var contract
-            if (address == '0x1B2A2f6ed4A1401E8C73B4c2B6172455ce2f78E8') {
-                contract = new web3.eth.Contract(IFOPOOL, address)
-            } else {
-                contract = new web3.eth.Contract(SYRUP, address)
-            }
-            contract_list.push(contract)
-        }
-        setContracts(contract_list)
     }, [])
     return (
         < Box sx={{ minWidth: 300, margin: 2 }}>
@@ -97,7 +98,7 @@ export const ContractTable = (props) => {
             <List sx={{ minWidth: 600, bgcolor: 'background.paper', margin: 1 }}>
                 {contracts.map(contract => {
                     return (
-                        <ContractInfo wallet={wallet} key={contract.options.address} contract={contract} deleteContract={deleteContract} wallet={wallet} />
+                        <ContractInfo privateWallet={privateWallet} key={contract.options.address} contract={contract} deleteContract={deleteContract} />
                     )
                 })}
             </List>

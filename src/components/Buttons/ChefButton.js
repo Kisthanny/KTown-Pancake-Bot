@@ -17,7 +17,7 @@ export const ChefButton = (props) => {
     const [inputText, setInputText] = useState("")
     const [open, setOpen] = useState(false);
     const [buttonStatus, setButtonStatus] = useState(false)
-    const { updateLocalStorage } = props
+    const { addContract } = props
     async function fetchAsync(url) {
         let response = await fetch(url);
         let data = await response.json();
@@ -32,12 +32,11 @@ export const ChefButton = (props) => {
                 const url = `https://api.bscscan.com/api?module=account&action=txlistinternal&address=${chefAddress}&startblock=` + startBlock.toString() + "&endblock=" + currentHeight.toString() + "&page=1&offset=10&sort=asc&apikey=" + process.env.REACT_APP_BSCSCAN_API_KEY
                 fetchAsync(url).then(data => {
                     data.result.reverse().map(tx => {
-                        console.log(tx.contractAddress)
-                        updateLocalStorage(tx.contractAddress)
+                        addContract(tx.contractAddress)
                     })
                     setButtonStatus(false)
                     setOpen(false)
-                    window.location.reload(false);
+                    //window.location.reload(false);
                 })
             })
     }

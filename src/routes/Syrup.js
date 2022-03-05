@@ -1,8 +1,8 @@
 import { ContractTable } from "../components/ContractTable";
-import { getWallet } from "../data";
+import { getPrivateWallet } from "../data";
 export default function Syrup() {
-    const wallet = getWallet()
+    const privateWallet = getPrivateWallet()
     return (
-        <ContractTable wallet={wallet}></ContractTable>
+        <ContractTable privateWallet={privateWallet}></ContractTable>
     );
 }

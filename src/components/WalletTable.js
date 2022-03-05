@@ -12,12 +12,12 @@ import { useState } from "react";
 import { Tooltip } from '@mui/material';
 
 export const WalletTable = (props) => {
-    const { wallet, deleteAccount, publicAddressBook } = props
+    const { privateWallet, deleteAccount, publicWallet } = props
     const [checked, setChecked] = useState(false);
     function handleChange(event) {
         setChecked(event.target.checked);
     }
-    if (wallet) {
+    if (privateWallet.length > 0 || publicWallet.length > 0) {
         return (
             <TableContainer component={Paper}>
                 <Table stickyHeader sx={{ minWidth: 650 }} aria-label="wallet table">
@@ -41,14 +41,14 @@ export const WalletTable = (props) => {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {wallet.map(account => {
-                            let index = wallet.indexOf(account) + 1
+                        {privateWallet.map(account => {
+                            let index = privateWallet.indexOf(account) + 1
                             return (
                                 <AccountInfo key={account.address} index={index} account={account} deleteAccount={deleteAccount} checked={checked} />
                             )
                         })}
-                        {publicAddressBook.map(account => {
-                            let index = 'public ' + (publicAddressBook.indexOf(account) + 1).toString()
+                        {publicWallet.map(account => {
+                            let index = 'public ' + (publicWallet.indexOf(account) + 1).toString()
                             return (
                                 <AccountInfo key={account.address + 'p'} index={index} account={account} deleteAccount={deleteAccount} checked={checked} />
                             )

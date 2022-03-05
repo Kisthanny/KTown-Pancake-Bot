@@ -17,7 +17,7 @@ const web3 = new Web3(window.ethereum)
 export const ContractInfo = (props) => {
     const addNotification = useNotification()
     const [symbol, setSymbol] = useState('')
-    const { wallet, contract, deleteContract } = props
+    const { privateWallet, contract, deleteContract } = props
     async function getSymbol() {
         if (contract.options.address == '0x1B2A2f6ed4A1401E8C73B4c2B6172455ce2f78E8') {
             setSymbol('IFO POOL')
@@ -91,7 +91,7 @@ export const ContractInfo = (props) => {
                 anchorReference="anchorPosition"
                 anchorPosition={{ top: 200, left: 400 }}
             >
-                <ContractCard contract={contract} symbol={symbol} wallet={wallet} ></ContractCard>
+                <ContractCard contract={contract} symbol={symbol} privateWallet={privateWallet} ></ContractCard>
             </Popover>
             <Backdrop
                 sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}

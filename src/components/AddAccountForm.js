@@ -56,6 +56,7 @@ export const AddAccountForm = ({ addAccount, addAccountGroup, clearAccount }) =>
         const pk_arr = privateKeyGroup.replaceAll(/\s/g, '').split(',')
         addAccountGroup(pk_arr)
         setPrivateKeyGroup('')
+        handleClose()
     }
     const clearAccountHandler = (e) => {
         e.preventDefault()

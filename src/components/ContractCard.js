@@ -33,8 +33,8 @@ function union(a, b) {
 }
 export function ContractCard(props) {
     const addNotification = useNotification()
-    const { contract, symbol, wallet } = props
-    const [checked, setChecked] = useState(wallet);
+    const { contract, symbol, privateWallet } = props
+    const [checked, setChecked] = useState(privateWallet);
     const [anchorEl, setAnchorEl] = useState(null);
     const [type, setType] = useState("")
 
@@ -156,7 +156,7 @@ export function ContractCard(props) {
                                 {contract.options.address}
                             </Typography>
                             <Typography variant='h6'>
-                                {`${numberOfChecked(wallet)} accounts`}
+                                {`${numberOfChecked(privateWallet)} accounts`}
                             </Typography>
                         </CardContent>
                         <CardActions>
@@ -175,24 +175,24 @@ export function ContractCard(props) {
                     sx={{ px: 2, py: 1 }}
                     avatar={
                         <Checkbox
-                            onClick={handleToggleAll(wallet)}
+                            onClick={handleToggleAll(privateWallet)}
                             edge="start"
-                            checked={numberOfChecked(wallet) === wallet.length && wallet.length !== 0}
+                            checked={numberOfChecked(privateWallet) === privateWallet.length && privateWallet.length !== 0}
                             indeterminate={
-                                numberOfChecked(wallet) !== wallet.length && numberOfChecked(wallet) !== 0
+                                numberOfChecked(privateWallet) !== privateWallet.length && numberOfChecked(privateWallet) !== 0
                             }
-                            disabled={wallet.length === 0}
+                            disabled={privateWallet.length === 0}
                             inputProps={{
                                 'aria-label': 'all accounts selected',
                             }}
                         />
                     }
                     title="Select Multiple"
-                    subheader={`${numberOfChecked(wallet)}/${wallet.length} selected`}
+                    subheader={`${numberOfChecked(privateWallet)}/${privateWallet.length} selected`}
                 />
             </ListItem>
             <Divider />
-            {wallet.map(account => {
+            {privateWallet.map(account => {
                 return (
                     <ListItem
                         key={account.address}

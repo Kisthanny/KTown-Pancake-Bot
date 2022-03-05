@@ -6,7 +6,7 @@ import ListItemText from '@mui/material/ListItemText';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import Divider from '@mui/material/Divider';
 import Checkbox from '@mui/material/Checkbox';
-import { getWallet, getAddressBook } from "../data";
+import { getPrivateWallet, getPublicWallet } from "../data";
 import { useState } from 'react';
 function not(a, b) {
     return a.filter((value) => b.indexOf(value) === -1);
@@ -21,9 +21,9 @@ function union(a, b) {
 }
 export default function SelectMultiple(props) {
     const { dispatch, alignment } = props
-    const wallet_list = getWallet()
-    const address_book = alignment == "s2m" ? getAddressBook() : []
-    const items = wallet_list.concat(address_book).map(account => {
+    const privateWallet_list = getPrivateWallet()
+    const publicWallet_list = alignment == "s2m" ? getPublicWallet() : []
+    const items = privateWallet_list.concat(publicWallet_list).map(account => {
         return account.address
     })
     const [checked, setChecked] = useState([]);
@@ -47,7 +47,7 @@ export default function SelectMultiple(props) {
             dispatch({
                 type: "SET_MULTIPLE",
                 payload: newChecked.map(address => {
-                    return wallet_list[items.indexOf(address)]
+                    return privateWallet_list[items.indexOf(address)]
                 })
             })
         }
@@ -72,7 +72,7 @@ export default function SelectMultiple(props) {
             } else {
                 dispatch({
                     type: "SET_MULTIPLE",
-                    payload: wallet_list
+                    payload: privateWallet_list
                 })
             }
         }
