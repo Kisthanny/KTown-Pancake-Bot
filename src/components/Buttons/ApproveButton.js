@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Button from "@mui/material/Button";
 import Web3 from "web3";
 import { pancake_contract } from "../ContractLib";
@@ -7,12 +7,13 @@ const web3 = new Web3(window.ethereum)
 
 export const ApproveButton = (props) => {
     const addNotification = useNotification()
-    const { account, spender_contract } = props
+    const { account, spender_contract, disabled } = props
     const [buttonText, setButtonText] = useState("approve");
     const [buttonStatus, setButtonStatus] = useState(false);
     const limit = web3.utils.toWei('1000')
 
     const approveHandler = async () => {
+        if (disabled) { return null }
         const allowance = await pancake_contract.methods.allowance(account.address, spender_contract.options.address).call()
         if (allowance >= parseInt(Web3.utils.toWei('100'))) {
             setButtonText("approved")

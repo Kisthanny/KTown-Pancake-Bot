@@ -1,17 +1,20 @@
 import { useState } from "react";
 import Button from "@mui/material/Button";
+import IconButton from '@mui/material/IconButton';
+import IndeterminateCheckBoxIcon from '@mui/icons-material/IndeterminateCheckBox';
+import Tooltip from '@mui/material/Tooltip';
 import Web3 from "web3";
-import { pancake_contract } from "../ContractLib";
 import { useNotification } from "../Notification/NotificationProvider";
 const web3 = new Web3(window.ethereum)
 
 export const WithdrawButton = (props) => {
     const addNotification = useNotification()
-    const { account, spender_contract } = props
-    const [buttonText, setButtonText] = useState("withdraw");
+    const { account, spender_contract, disabled } = props
+    const [buttonColor, setButtonColor] = useState("primary");
     const [buttonStatus, setButtonStatus] = useState(false);
 
     const withdrawHandler = async () => {
+        if (disabled) { return null }
         // check for pool balance
         let userInfo = await spender_contract.methods.userInfo(account.address).call()
         if (parseInt(userInfo.amount) <= 0) {
@@ -19,7 +22,7 @@ export const WithdrawButton = (props) => {
             return null
         }
 
-        setButtonText("withdrawing");
+        setButtonColor("default");
         setButtonStatus(true);
         var tx = {
             from: account.address,
@@ -31,17 +34,20 @@ export const WithdrawButton = (props) => {
         web3.eth.accounts.signTransaction(tx, account.privateKey).then(signedTx => {
             web3.eth.sendSignedTransaction(signedTx.rawTransaction).on("receipt", receipt => {
                 console.log(receipt);
-                setButtonText("harvested");
                 addNotification("success", `${account.address} successfully withdraw`)
             }).on("error", err => {
                 console.log(err);
-                setButtonText("withdraw again");
+                setButtonColor("primary");
                 setButtonStatus(false);
                 addNotification("error", err, 10000)
             });
         });
     }
     return (
-        <Button className="withdrawButton" variant="outlined" onClick={withdrawHandler} disabled={buttonStatus}>{buttonText}</Button>
+        <Tooltip title="withdraw">
+            <IconButton className="withdrawButton" color={buttonColor} onClick={withdrawHandler} disabled={buttonStatus}>
+                <IndeterminateCheckBoxIcon fontSize="large" />
+            </IconButton>
+        </Tooltip>
     )
 }

@@ -18,22 +18,6 @@ export const ContractInfo = (props) => {
     const addNotification = useNotification()
     const [symbol, setSymbol] = useState('')
     const { privateWallet, contract, deleteContract } = props
-    async function getSymbol() {
-        if (contract.options.address == '0x1B2A2f6ed4A1401E8C73B4c2B6172455ce2f78E8') {
-            setSymbol('IFO POOL')
-            return null
-        } else if (contract.options.address == '0xa80240Eb5d7E05d3F250cF000eEc0891d00b51CC') {
-            setSymbol('AUTO CAKE')
-            return null
-        } else {
-            contract.methods.rewardToken().call().then(address => {
-                const reward_token = new web3.eth.Contract(IBEP20, address)
-                reward_token.methods.symbol().call().then(resp => {
-                    setSymbol(resp)
-                })
-            })
-        }
-    }
 
     const deleteHandler = () => {
         deleteContract(contract)
@@ -53,7 +37,24 @@ export const ContractInfo = (props) => {
         addNotification("info", "copied to clipboard", 2000)
     };
     useEffect(() => {
-        getSymbol();
+        let isSubscribed = true
+        if (contract.options.address == '0x1B2A2f6ed4A1401E8C73B4c2B6172455ce2f78E8') {
+            setSymbol('IFO POOL')
+            return null
+        } else if (contract.options.address == '0xa80240Eb5d7E05d3F250cF000eEc0891d00b51CC') {
+            setSymbol('AUTO CAKE')
+            return null
+        } else {
+            contract.methods.rewardToken().call().then(address => {
+                if (!isSubscribed) { return null }
+                const reward_token = new web3.eth.Contract(IBEP20, address)
+                reward_token.methods.symbol().call().then(resp => {
+                    if (!isSubscribed) { return null }
+                    setSymbol(resp)
+                })
+            })
+        }
+        return () => (isSubscribed = false)
     }, [])
     return (
         <ListItem

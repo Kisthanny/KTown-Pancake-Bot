@@ -1,5 +1,7 @@
 import { useState } from "react";
-import Button from "@mui/material/Button";
+import IconButton from '@mui/material/IconButton';
+import AddBoxIcon from '@mui/icons-material/AddBox';
+import Tooltip from '@mui/material/Tooltip';
 import Web3 from "web3";
 import { pancake_contract } from "../ContractLib";
 import { balanceOf } from "../../Web3Client";
@@ -8,19 +10,21 @@ const web3 = new Web3(window.ethereum)
 
 export const DepositButton = (props) => {
     const addNotification = useNotification()
-    const { account, spender_contract } = props
-    const [buttonText, setButtonText] = useState("deposit");
+    const { account, spender_contract, disabled } = props
+    const [buttonColor, setButtonColor] = useState("primary");
     const [buttonStatus, setButtonStatus] = useState(false);
     const amountLimit = parseInt(Web3.utils.toWei('100'))
 
     const depositHandler = async () => {
+        if (disabled) { return null }
+        console.log(account.address)
         // check for approval
         const allowance = await pancake_contract.methods.allowance(account.address, spender_contract.options.address).call()
         if (allowance < amountLimit) {
             addNotification("warning", `${account.address} need approval`, 6000)
             return null
         }
-        setButtonText("depositing");
+        setButtonColor("default");
         setButtonStatus(true);
         // set amount
         let amount = parseInt(Web3.utils.toWei(await balanceOf(account.address, 'pancake')))
@@ -37,7 +41,6 @@ export const DepositButton = (props) => {
             }
         }
         if (amount <= 0) {
-            setButtonText('no balance')
             addNotification("warning", `${account.address} insufficient balance or exceeded limit`, 6000)
             return null
         }
@@ -53,17 +56,20 @@ export const DepositButton = (props) => {
         web3.eth.accounts.signTransaction(tx, account.privateKey).then(signedTx => {
             web3.eth.sendSignedTransaction(signedTx.rawTransaction).on("receipt", receipt => {
                 console.log(receipt);
-                setButtonText("staked");
                 addNotification("success", `${account.address} staked`)
             }).on("error", err => {
                 console.log(err);
-                setButtonText("deposit again");
+                setButtonColor("primary");
                 setButtonStatus(false);
                 addNotification("error", err, 10000)
             });
         });
     }
     return (
-        <Button className="depositButton" variant="outlined" onClick={depositHandler} disabled={buttonStatus}>{buttonText}</Button>
+        <Tooltip title="deposit">
+            <IconButton size="large" className="depositButton" color={buttonColor} onClick={depositHandler} disabled={buttonStatus}>
+                <AddBoxIcon fontSize="large" />
+            </IconButton>
+        </Tooltip>
     )
 }

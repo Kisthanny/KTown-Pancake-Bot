@@ -1,7 +1,5 @@
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import Checkbox from '@mui/material/Checkbox';
 import Button from '@mui/material/Button';
@@ -13,9 +11,7 @@ import CardActions from '@mui/material/CardActions';
 import Divider from '@mui/material/Divider';
 import Popover from '@mui/material/Popover';
 import Backdrop from '@mui/material/Backdrop';
-import { ApproveButton } from "./Buttons/ApproveButton"
-import { DepositButton } from "./Buttons/DepositButton.js"
-import { WithdrawButton } from "./Buttons/WithdrawButton.js"
+import { TransactGroup } from "./TransactGroup.js";
 import { useState } from "react";
 import { CardContent, Typography } from '@mui/material';
 import { useNotification } from './Notification/NotificationProvider';
@@ -194,30 +190,7 @@ export function ContractCard(props) {
             <Divider />
             {privateWallet.map(account => {
                 return (
-                    <ListItem
-                        key={account.address}
-                        secondaryAction={
-                            <ButtonGroup edge="end" variant="outlined" size="small" color="secondary" aria-label="single transact group">
-                                <ApproveButton account={account} spender_contract={contract} />
-                                <DepositButton account={account} spender_contract={contract} />
-                                <WithdrawButton account={account} spender_contract={contract} />
-                            </ButtonGroup>
-                        }
-                    >
-                        <ListItemButton role={undefined} onClick={handleToggle(account)} dense>
-                            <ListItemIcon>
-                                <Checkbox
-                                    edge="start"
-                                    checked={checked.indexOf(account) !== -1}
-                                    tabIndex={-1}
-                                    disableRipple
-                                    inputProps={{ 'aria-labelledby': account.address }}
-                                />
-                            </ListItemIcon>
-                            <ListItemText id={account.address} primary={account.address} />
-
-                        </ListItemButton>
-                    </ListItem>
+                    <TransactGroup key={account.address} account={account} handleToggle={handleToggle} checked={checked} contract={contract} />
                 )
             })}
         </List>
