@@ -10,8 +10,10 @@ import Divider from '@mui/material/Divider';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
-import Web3 from "web3";
 import { useState } from "react";
+import Web3 from "web3";
+import { v4 } from "uuid";
+import emitter from "../../events/events";
 const web3 = new Web3(window.ethereum)
 
 export default function MultipleTransferButton(props) {
@@ -98,8 +100,15 @@ export default function MultipleTransferButton(props) {
         setFromAddress(tx.from)
         setToAddress(tx.to)
         setAmount(web3.utils.fromWei(amount))
-        const signedTx = await web3.eth.accounts.signTransaction(tx, from.privateKey)
-        if (alignment == "s2m") {
+        emitter.emit('addTask', {
+            tx: tx,
+            fromAccount: from.address,
+            privateKey: from.privateKey,
+            key: v4(),
+            transactionHash: '0x',
+            status: "pending"
+        })
+        /* if (alignment == "s2m") {
             const resp = await web3.eth.sendSignedTransaction(signedTx.rawTransaction)
             addNotification("success", "transfer complete")
             setRespCount(prev => {
@@ -118,7 +127,7 @@ export default function MultipleTransferButton(props) {
                 console.log(err);
                 addNotification("error", "transaction reverted", 10000)
             });
-        }
+        } */
     }
     async function singleToMultiple(from, to_arr, token, amount, to_offset = null) {
         amount = web3.utils.toWei(amount)
@@ -136,6 +145,7 @@ export default function MultipleTransferButton(props) {
             setProgress((index + 1) / to_arr.length * 100)
             await transfer(from, to_account, token, amount, to_offset, undefined)
         }
+        emitter.emit('startTask')
         setProgress(0)
         handleClose()
     }
@@ -153,10 +163,12 @@ export default function MultipleTransferButton(props) {
             const from_account = from_arr[index];
             await transfer(from_account, to, token, amount, undefined, from_offset)
         }
+        emitter.emit('startTask')
     }
 
     const handleTransfer = () => {
-        setConfirmedTransact(true)
+        handleClose()
+        //setConfirmedTransact(true)
         if (alignment == "s2m") {
             singleToMultiple(state.single, state.multiple, state.token, state.amount, state.to_offset)
         } else {
@@ -192,7 +204,7 @@ export default function MultipleTransferButton(props) {
                             </Typography>
                         </CardContent>
                         <CardActions>
-                            <Button size="small" variant="contained" color="error" onClick={handleAbort}>Cancel</Button>
+                            <Button size="small" variant="contained" color="error" onClick={handleClose}>Minimize</Button>
                         </CardActions>
                         <Divider />
                         <LinearProgress variant="determinate" value={progress} />

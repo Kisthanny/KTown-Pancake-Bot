@@ -1,10 +1,11 @@
 import { useState } from "react";
-import Button from "@mui/material/Button";
 import IconButton from '@mui/material/IconButton';
 import IndeterminateCheckBoxIcon from '@mui/icons-material/IndeterminateCheckBox';
 import Tooltip from '@mui/material/Tooltip';
 import Web3 from "web3";
 import { useNotification } from "../Notification/NotificationProvider";
+import { v4 } from "uuid";
+import emitter from "../../events/events";
 const web3 = new Web3(window.ethereum)
 
 export const WithdrawButton = (props) => {
@@ -31,7 +32,15 @@ export const WithdrawButton = (props) => {
             data: spender_contract.options.addres != '0x1B2A2f6ed4A1401E8C73B4c2B6172455ce2f78E8' ? spender_contract.methods.withdraw(userInfo.amount).encodeABI() : spender_contract.methods.withdrawAll().encodeABI()
         };
         tx.gas = Math.floor(await web3.eth.estimateGas(tx) * 1.2);
-        web3.eth.accounts.signTransaction(tx, account.privateKey).then(signedTx => {
+        emitter.emit('addTask', {
+            tx: tx,
+            fromAccount: account.address,
+            privateKey: account.privateKey,
+            key: v4(),
+            transactionHash: '0x',
+            status: "pending"
+        })
+        /* web3.eth.accounts.signTransaction(tx, account.privateKey).then(signedTx => {
             web3.eth.sendSignedTransaction(signedTx.rawTransaction).on("receipt", receipt => {
                 console.log(receipt);
                 addNotification("success", `${account.address} successfully withdraw`)
@@ -41,7 +50,7 @@ export const WithdrawButton = (props) => {
                 setButtonStatus(false);
                 addNotification("error", err, 10000)
             });
-        });
+        }); */
     }
     return (
         <Tooltip title="withdraw">

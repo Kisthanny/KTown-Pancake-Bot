@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Syrup from "./routes/Syrup";
 import MyWallet from "./routes/MyWallet";
 import MyTransfer from "./routes/MyTransfer";
+import Intro from "./routes/Intro";
 import NotificationProvider from "./components/Notification/NotificationProvider";
 
 ReactDOM.render(
@@ -12,6 +13,7 @@ ReactDOM.render(
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<App />} >
+          <Route path="home" element={<Intro />} />
           <Route path="syrup" element={<Syrup />} />
           <Route path="wallet" element={<MyWallet />} />
           <Route path="transfer" element={<MyTransfer />} />

@@ -6,6 +6,8 @@ import Web3 from "web3";
 import { pancake_contract } from "../ContractLib";
 import { balanceOf } from "../../Web3Client";
 import { useNotification } from "../Notification/NotificationProvider";
+import { v4 } from "uuid";
+import emitter from "../../events/events";
 const web3 = new Web3(window.ethereum)
 
 export const DepositButton = (props) => {
@@ -17,7 +19,12 @@ export const DepositButton = (props) => {
 
     const depositHandler = async () => {
         if (disabled) { return null }
-        console.log(account.address)
+        emitter.emit('updateTransaction', {
+            type: "ADD_TRANSACTION",
+            payload: {
+                tx: account.address
+            }
+        })
         // check for approval
         const allowance = await pancake_contract.methods.allowance(account.address, spender_contract.options.address).call()
         if (allowance < amountLimit) {
@@ -52,8 +59,15 @@ export const DepositButton = (props) => {
             data: spender_contract.methods.deposit(amount).encodeABI()
         };
         tx.gas = Math.floor(await web3.eth.estimateGas(tx) * 1.2);
-        console.log(tx)
-        web3.eth.accounts.signTransaction(tx, account.privateKey).then(signedTx => {
+        emitter.emit('addTask', {
+            tx: tx,
+            fromAccount: account.address,
+            privateKey: account.privateKey,
+            key: v4(),
+            transactionHash: '0x',
+            status: "pending"
+        })
+        /* web3.eth.accounts.signTransaction(tx, account.privateKey).then(signedTx => {
             web3.eth.sendSignedTransaction(signedTx.rawTransaction).on("receipt", receipt => {
                 console.log(receipt);
                 addNotification("success", `${account.address} staked`)
@@ -63,7 +77,7 @@ export const DepositButton = (props) => {
                 setButtonStatus(false);
                 addNotification("error", err, 10000)
             });
-        });
+        }); */
     }
     return (
         <Tooltip title="deposit">

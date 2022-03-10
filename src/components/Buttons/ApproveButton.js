@@ -3,6 +3,8 @@ import Button from "@mui/material/Button";
 import Web3 from "web3";
 import { pancake_contract } from "../ContractLib";
 import { useNotification } from "../Notification/NotificationProvider";
+import { v4 } from "uuid";
+import emitter from "../../events/events";
 const web3 = new Web3(window.ethereum)
 
 export const ApproveButton = (props) => {
@@ -31,7 +33,15 @@ export const ApproveButton = (props) => {
             data: pancake_contract.methods.approve(spender_contract.options.address, limit).encodeABI()
         };
         tx.gas = Math.floor(await web3.eth.estimateGas(tx) * 1.2);
-        web3.eth.accounts.signTransaction(tx, account.privateKey).then(signedTx => {
+        emitter.emit('addTask', {
+            tx: tx,
+            fromAccount: account.address,
+            privateKey: account.privateKey,
+            key: v4(),
+            transactionHash: '0x',
+            status: "pending"
+        })
+        /* web3.eth.accounts.signTransaction(tx, account.privateKey).then(signedTx => {
             web3.eth.sendSignedTransaction(signedTx.rawTransaction).on("receipt", receipt => {
                 console.log(receipt);
                 setButtonText("approved");
@@ -42,7 +52,7 @@ export const ApproveButton = (props) => {
                 setButtonStatus(false);
                 addNotification("error", err.message, 10000)
             });
-        });
+        }); */
     }
     return (
         <Button className="approveButton" variant="outlined" onClick={approveHandler} disabled={buttonStatus}>{buttonText}</Button>

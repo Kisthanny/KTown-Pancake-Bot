@@ -17,6 +17,7 @@ const web3 = new Web3(window.ethereum)
 export const ContractInfo = (props) => {
     const addNotification = useNotification()
     const [symbol, setSymbol] = useState('')
+    const [blockTillStart, setBlockTillStart] = useState(0)
     const { privateWallet, contract, deleteContract } = props
 
     const deleteHandler = () => {
@@ -36,6 +37,15 @@ export const ContractInfo = (props) => {
         navigator.clipboard.writeText(contract.options.address)
         addNotification("info", "copied to clipboard", 2000)
     };
+
+    function secToDay(seconds) {
+        // just a function converting seconds to [day,hour,minute]
+        let day = Math.floor(seconds / (86400))
+        let hour = Math.floor(seconds % (86400) / 3600)
+        let minute = Math.floor(seconds % 3600 / 60)
+        return `${day > 0 ? day + ' day' : ''} ${hour > 0 ? hour + ' hour' : ''} ${minute > 0 ? minute + ' minute' : ''}`
+    }
+
     useEffect(() => {
         let isSubscribed = true
         if (contract.options.address == '0x1B2A2f6ed4A1401E8C73B4c2B6172455ce2f78E8') {
@@ -54,6 +64,13 @@ export const ContractInfo = (props) => {
                 })
             })
         }
+        web3.eth.getBlockNumber().then(blockNum => {
+            if (!isSubscribed) { return null }
+            contract.methods.startBlock().call().then(startBlock => {
+                if (!isSubscribed) { return null }
+                setBlockTillStart(Number(startBlock) - Number(blockNum))
+            })
+        })
         return () => (isSubscribed = false)
     }, [])
     return (
@@ -80,7 +97,7 @@ export const ContractInfo = (props) => {
                 divider={true}
             >
                 <ListItemText
-                    primary={symbol}
+                    primary={blockTillStart > 0 ? `${symbol} starts at approx ${secToDay(blockTillStart * 3)}` : symbol}
                     secondary={contract.options.address}
                 />
             </ListItemButton>
@@ -92,7 +109,7 @@ export const ContractInfo = (props) => {
                 anchorReference="anchorPosition"
                 anchorPosition={{ top: 200, left: 400 }}
             >
-                <ContractCard contract={contract} symbol={symbol} privateWallet={privateWallet} ></ContractCard>
+                <ContractCard contract={contract} symbol={symbol} privateWallet={privateWallet} closeFatherPop={handleClose}></ContractCard>
             </Popover>
             <Backdrop
                 sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}

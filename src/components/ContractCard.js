@@ -29,7 +29,7 @@ function union(a, b) {
 }
 export function ContractCard(props) {
     const addNotification = useNotification()
-    const { contract, symbol, privateWallet } = props
+    const { contract, symbol, privateWallet, closeFatherPop } = props
     const [checked, setChecked] = useState(privateWallet);
     const [anchorEl, setAnchorEl] = useState(null);
     const [type, setType] = useState("")
@@ -60,6 +60,7 @@ export function ContractCard(props) {
                 break;
         }
         handleClose()
+        closeFatherPop()
         addNotification("info", "please wait till all transaction are done...", 10000)
     }
     const handleToggle = (value) => () => {
