@@ -15,6 +15,7 @@ import { TransactGroup } from "./TransactGroup.js";
 import { useState } from "react";
 import { CardContent, Typography } from '@mui/material';
 import { useNotification } from './Notification/NotificationProvider';
+import emitter from "../events/events"
 
 function not(a, b) {
     return a.filter((value) => b.indexOf(value) === -1);
@@ -61,6 +62,7 @@ export function ContractCard(props) {
         }
         handleClose()
         closeFatherPop()
+        emitter.emit('startTask')
         addNotification("info", "please wait till all transaction are done...", 10000)
     }
     const handleToggle = (value) => () => {

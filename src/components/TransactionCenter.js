@@ -118,11 +118,15 @@ export const TransactionCenter = () => {
                 payload: task
             })
             taskFlow.push(task)
+            console.log("addTask");
         })
         emitter.addListener('startTask', () => {
-            setOnTransact(true)
-            requestWork()
-            menuRef.current.click()
+            if (!onTransact) {
+                setOnTransact(true)
+                requestWork()
+                menuRef.current.click()
+                console.log('startTask')
+            }
         })
         return () => {
             emitter.removeListener('addTask')

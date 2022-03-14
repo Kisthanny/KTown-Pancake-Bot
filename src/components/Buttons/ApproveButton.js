@@ -41,6 +41,7 @@ export const ApproveButton = (props) => {
             transactionHash: '0x',
             status: "pending"
         })
+        emitter.emit('startTask')
         /* web3.eth.accounts.signTransaction(tx, account.privateKey).then(signedTx => {
             web3.eth.sendSignedTransaction(signedTx.rawTransaction).on("receipt", receipt => {
                 console.log(receipt);

@@ -33,7 +33,7 @@ export const TransactGroup = (props) => {
             )
         }
     }
-
+    const specialPools = ["0x1B2A2f6ed4A1401E8C73B4c2B6172455ce2f78E8", "0xa80240Eb5d7E05d3F250cF000eEc0891d00b51CC"]
     useEffect(() => {
         let isSubscribed = true
 
@@ -47,10 +47,12 @@ export const TransactGroup = (props) => {
             setAllowance(allowance)
         })
 
-        contract.methods.pendingReward(account.address).call().then(pendingReward => {
-            if (!isSubscribed) { return null }
-            setReward(parseFloat(Web3.utils.fromWei(pendingReward)).toFixed(2))
-        })
+        if (specialPools.indexOf(contract.options.address) == -1) {
+            contract.methods.pendingReward(account.address).call().then(pendingReward => {
+                if (!isSubscribed) { return null }
+                setReward(parseFloat(Web3.utils.fromWei(pendingReward)).toFixed(2))
+            })
+        }
 
         return () => (isSubscribed = false)
     }, [])

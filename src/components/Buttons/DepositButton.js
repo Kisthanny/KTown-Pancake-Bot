@@ -10,6 +10,7 @@ import { v4 } from "uuid";
 import emitter from "../../events/events";
 const web3 = new Web3(window.ethereum)
 
+const specialPools = ["0x1B2A2f6ed4A1401E8C73B4c2B6172455ce2f78E8", "0xa80240Eb5d7E05d3F250cF000eEc0891d00b51CC"]
 export const DepositButton = (props) => {
     const addNotification = useNotification()
     const { account, spender_contract, disabled } = props
@@ -39,13 +40,17 @@ export const DepositButton = (props) => {
         // check if pool has limit
         // length = 44 to determine it is syrup pool
         if (spender_contract.options.jsonInterface.length == 44) {
-            let hasUserLimit = await spender_contract.methods.hasUserLimit().call()
-            if (hasUserLimit) {
-                let userLimit = await spender_contract.methods.poolLimitPerUser().call()
-                let userInfo = await spender_contract.methods.userInfo(account.address).call()
-                userLimit -= userInfo[0]
-                amount = amount > userLimit ? userLimit : amount
+            if (specialPools.indexOf(spender_contract.options.address) == -1) {
+                let hasUserLimit = await spender_contract.methods.hasUserLimit().call()
+                if (hasUserLimit) {
+                    let userLimit = await spender_contract.methods.poolLimitPerUser().call()
+                    let userInfo = await spender_contract.methods.userInfo(account.address).call()
+                    userLimit -= userInfo[0]
+                    amount = amount > userLimit ? userLimit : amount
+                }
             }
+        } else {
+            console.log("not syrup")
         }
         if (amount <= 0) {
             addNotification("warning", `${account.address} insufficient balance or exceeded limit`, 6000)
@@ -67,6 +72,7 @@ export const DepositButton = (props) => {
             transactionHash: '0x',
             status: "pending"
         })
+        emitter.emit('startTask')
         /* web3.eth.accounts.signTransaction(tx, account.privateKey).then(signedTx => {
             web3.eth.sendSignedTransaction(signedTx.rawTransaction).on("receipt", receipt => {
                 console.log(receipt);
