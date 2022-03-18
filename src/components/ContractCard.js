@@ -15,7 +15,6 @@ import { TransactGroup } from "./TransactGroup.js";
 import { useState } from "react";
 import { CardContent, Typography } from '@mui/material';
 import { useNotification } from './Notification/NotificationProvider';
-import emitter from "../events/events"
 
 function not(a, b) {
     return a.filter((value) => b.indexOf(value) === -1);
@@ -30,7 +29,7 @@ function union(a, b) {
 }
 export function ContractCard(props) {
     const addNotification = useNotification()
-    const { contract, symbol, privateWallet, closeFatherPop } = props
+    const { contract, symbol, privateWallet } = props
     const [checked, setChecked] = useState(privateWallet);
     const [anchorEl, setAnchorEl] = useState(null);
     const [type, setType] = useState("")
@@ -61,8 +60,6 @@ export function ContractCard(props) {
                 break;
         }
         handleClose()
-        closeFatherPop()
-        emitter.emit('startTask')
         addNotification("info", "please wait till all transaction are done...", 10000)
     }
     const handleToggle = (value) => () => {

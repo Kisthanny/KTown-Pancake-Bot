@@ -136,10 +136,10 @@ export const AddAccountForm = ({ addAccount, addAccountGroup, clearAccount }) =>
                         </Tooltip>
                     </TabPanel>
                     <TabPanel value="2">
-                        <TextField onChange={inputHandler}
+                        <TextField
+                            onChange={inputHandler}
                             id="private_key_group"
                             value={privateKeyGroup}
-                            onChange={inputHandler}
                             helperText="use comma( , ) to seperate your keys"
                             label="add multiple accounts"
                             placeholder={"privateKey_1, \nprivateKey_2, \n... , \nprivatekey_n"}

@@ -109,7 +109,7 @@ export const ContractInfo = (props) => {
                 anchorReference="anchorPosition"
                 anchorPosition={{ top: 200, left: 400 }}
             >
-                <ContractCard contract={contract} symbol={symbol} privateWallet={privateWallet} closeFatherPop={handleClose}></ContractCard>
+                <ContractCard contract={contract} symbol={symbol} privateWallet={privateWallet}></ContractCard>
             </Popover>
             <Backdrop
                 sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}

@@ -4,8 +4,9 @@ import IndeterminateCheckBoxIcon from '@mui/icons-material/IndeterminateCheckBox
 import Tooltip from '@mui/material/Tooltip';
 import Web3 from "web3";
 import { useNotification } from "../Notification/NotificationProvider";
-import { v4 } from "uuid";
-import emitter from "../../events/events";
+import { useDispatch } from "react-redux";
+import { bindActionCreators } from "redux";
+import { actionCreators } from "../../state/index";
 const web3 = new Web3(window.ethereum)
 
 export const WithdrawButton = (props) => {
@@ -13,6 +14,10 @@ export const WithdrawButton = (props) => {
     const { account, spender_contract, disabled } = props
     const [buttonColor, setButtonColor] = useState("primary");
     const [buttonStatus, setButtonStatus] = useState(false);
+    /* using redux */
+    const dispatch_redux = useDispatch()
+    const { addTX } = bindActionCreators(actionCreators, dispatch_redux)
+    /* using redux */
 
     const withdrawHandler = async () => {
         if (disabled) { return null }
@@ -32,26 +37,25 @@ export const WithdrawButton = (props) => {
             data: spender_contract.options.addres != '0x1B2A2f6ed4A1401E8C73B4c2B6172455ce2f78E8' ? spender_contract.methods.withdraw(userInfo.amount).encodeABI() : spender_contract.methods.withdrawAll().encodeABI()
         };
         tx.gas = Math.floor(await web3.eth.estimateGas(tx) * 1.2);
-        emitter.emit('addTask', {
-            tx: tx,
-            fromAccount: account.address,
-            privateKey: account.privateKey,
-            key: v4(),
-            transactionHash: '0x',
-            status: "pending"
-        })
-        emitter.emit('startTask')
-        /* web3.eth.accounts.signTransaction(tx, account.privateKey).then(signedTx => {
+        web3.eth.accounts.signTransaction(tx, account.privateKey).then(signedTx => {
             web3.eth.sendSignedTransaction(signedTx.rawTransaction).on("receipt", receipt => {
-                console.log(receipt);
-                addNotification("success", `${account.address} successfully withdraw`)
+                addTX({
+                    from: account.address,
+                    status: "success",
+                    txHash: receipt.transactionHash
+                }, account.privateKey)
+                addNotification("success", `${account.address} withdrawed`)
             }).on("error", err => {
-                console.log(err);
+                addTX({
+                    from: account.address,
+                    status: "error",
+                    txHash: err[1].transactionHash
+                }, account.privateKey)
                 setButtonColor("primary");
                 setButtonStatus(false);
-                addNotification("error", err, 10000)
+                addNotification("error", err.message, 10000)
             });
-        }); */
+        });
     }
     return (
         <Tooltip title="withdraw">

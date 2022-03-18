@@ -3,39 +3,35 @@ import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import Popover from '@mui/material/Popover';
 import Backdrop from '@mui/material/Backdrop';
-import LinearProgress from '@mui/material/LinearProgress';
 import Card from '@mui/material/Card';
 import CardHeader from '@mui/material/CardHeader';
-import Divider from '@mui/material/Divider';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import { useState } from "react";
 import Web3 from "web3";
-import { v4 } from "uuid";
-import emitter from "../../events/events";
+import { useDispatch } from "react-redux";
+import { bindActionCreators } from "redux";
+import { actionCreators } from "../../state/index";
 const web3 = new Web3(window.ethereum)
 
 export default function MultipleTransferButton(props) {
+    /* using redux */
+    const dispatch_redux = useDispatch()
+    const { addTX, startTransact, setTransactMode } = bindActionCreators(actionCreators, dispatch_redux)
+    /* using redux */
     const { state, alignment } = props
     const addNotification = useNotification()
     const [anchorEl, setAnchorEl] = useState(null);
-    const [progress, setProgress] = useState(0.00);
-    const [fromAddress, setFromAddress] = useState("no address")
-    const [toAddress, setToAddress] = useState("no address")
-    const [amount, setAmount] = useState(undefined)
-    const [length, setLength] = useState(0)
-    const [index, setIndex] = useState(0)
-    const [respCount, setRespCount] = useState(0)
     const [abort, setAbort] = useState(false)
+    const [buttonText, setButtonText] = useState("transfer")
+    const [buttonEnable, setEnable] = useState(true)
 
     const open = Boolean(anchorEl);
     const id = open ? 'add-account-popover' : undefined;
 
     const handleClose = () => {
         setAnchorEl(null);
-        setRespCount(0)
-        setIndex(0)
     };
     const handleOpen = (event) => {
         setAnchorEl(event.currentTarget);
@@ -97,78 +93,47 @@ export default function MultipleTransferButton(props) {
             };
         }
         tx.gas = Math.floor(await web3.eth.estimateGas(tx) * 1.2);
-        setFromAddress(tx.from)
-        setToAddress(tx.to)
-        setAmount(web3.utils.fromWei(amount))
-        emitter.emit('addTask', {
-            tx: tx,
-            fromAccount: from.address,
-            privateKey: from.privateKey,
-            key: v4(),
-            transactionHash: '0x',
-            status: "pending"
-        })
-        /* if (alignment == "s2m") {
-            const resp = await web3.eth.sendSignedTransaction(signedTx.rawTransaction)
-            addNotification("success", "transfer complete")
-            setRespCount(prev => {
-                return prev + 1
-            })
-        } else {
-            web3.eth.sendSignedTransaction(signedTx.rawTransaction).on("receipt", receipt => {
-                addNotification("success", "transfer complete")
-                setRespCount(prev => {
-                    if ((prev + 1) >= length) {
-                        handleClose()
-                    }
-                    return prev + 1
-                })
-            }).on("error", err => {
-                console.log(err);
-                addNotification("error", "transaction reverted", 10000)
-            });
-        } */
+
+        /* using redux */
+        addTX(tx, from.privateKey)
     }
     async function singleToMultiple(from, to_arr, token, amount, to_offset = null) {
+        setTransactMode("SYNC")
         amount = web3.utils.toWei(amount)
         if (to_offset) {
             to_offset = web3.utils.toWei(to_offset)
         }
-        setLength(to_arr.length)
         for (let index = 0; index < to_arr.length; index++) {
             if (abort) {
                 console.log("should break")
                 break
             }
             const to_account = to_arr[index];
-            setIndex(index)
-            setProgress((index + 1) / to_arr.length * 100)
             await transfer(from, to_account, token, amount, to_offset, undefined)
         }
-        emitter.emit('startTask')
-        setProgress(0)
+        startTransact()
         handleClose()
     }
 
     async function multipleToSingle(from_arr, to, token, amount, from_offset = null) {
+        setTransactMode("ASYNC")
         amount = amount == 'MAX' ? amount : web3.utils.toWei(amount)
         if (from_offset) {
             from_offset = web3.utils.toWei(from_offset)
         }
-        setLength(from_arr.length)
         for (let index = 0; index < from_arr.length; index++) {
             if (abort) { handleClose(); break }
-            setIndex(index)
-            setProgress((index + 1) / from_arr.length * 100)
             const from_account = from_arr[index];
             await transfer(from_account, to, token, amount, undefined, from_offset)
         }
-        emitter.emit('startTask')
+        startTransact()
     }
 
     const handleTransfer = () => {
+        addNotification("info", "sending transactions, don't close or refresh this tab", 10000)
+        setButtonText("sending...")
+        setEnable(false)
         handleClose()
-        //setConfirmedTransact(true)
         if (alignment == "s2m") {
             singleToMultiple(state.single, state.multiple, state.token, state.amount, state.to_offset)
         } else {
@@ -181,66 +146,35 @@ export default function MultipleTransferButton(props) {
         addNotification("warning", "transaction canceled", 6000)
     }
 
-    const [confirmTransact, setConfirmedTransact] = useState(false)
     const popoverContent = () => {
-        if (confirmTransact) {
-            return (
-                <Box sx={{ minWidth: 800 }}>
-                    <Card>
-                        <CardHeader
-                            sx={{ px: 2, py: 1 }}
-                            title="Transfering..."
-                            subheader={`${index + 1}/${length} sent`}
-                        />
-                        <CardContent>
-                            <Typography variant="body2">
-                                {`from: ${fromAddress}`}
-                                <br />
-                                {`amount: ${amount}`}
-                                <br />
-                                {`to: ${toAddress}`}
-                                <br />
-                                {`confirmed: ${respCount}`}
-                            </Typography>
-                        </CardContent>
-                        <CardActions>
-                            <Button size="small" variant="contained" color="error" onClick={handleClose}>Minimize</Button>
-                        </CardActions>
-                        <Divider />
-                        <LinearProgress variant="determinate" value={progress} />
-                    </Card>
-                </Box>
-            )
-        } else {
-            return (
-                <Box sx={{ minWidth: 200 }}>
-                    <Card>
-                        <CardHeader
-                            sx={{ px: 2, py: 1 }}
-                            title="Sure to transact?"
-                        />
-                        <CardContent>
-                            <Typography variant="h6">
-                                from
-                            </Typography>
-                            <Typography variant="subtitle2">
-                                {alignment == "s2m" ? state.single ? state.single.address : "undefined" : `${state.multiple.length} accounts`}
-                            </Typography>
-                            <Typography variant="h6">
-                                to
-                            </Typography>
-                            <Typography variant="subtitle2">
-                                {alignment == "m2s" ? state.single ? state.single.address : "undefined" : `${state.multiple.length} accounts`}
-                            </Typography>
-                        </CardContent>
-                        <CardActions>
-                            <Button variant="outlined" color="success" onClick={handleTransfer}>yes, proceed</Button>
-                            <Button variant="outlined" color="error" onClick={handleClose}>No, cancel</Button>
-                        </CardActions>
-                    </Card>
-                </Box>
-            )
-        }
+        return (
+            <Box sx={{ minWidth: 200 }}>
+                <Card>
+                    <CardHeader
+                        sx={{ px: 2, py: 1 }}
+                        title="Sure to transact?"
+                    />
+                    <CardContent>
+                        <Typography variant="h6">
+                            from
+                        </Typography>
+                        <Typography variant="subtitle2">
+                            {alignment == "s2m" ? state.single ? state.single.address : "undefined" : `${state.multiple.length} accounts`}
+                        </Typography>
+                        <Typography variant="h6">
+                            to
+                        </Typography>
+                        <Typography variant="subtitle2">
+                            {alignment == "m2s" ? state.single ? state.single.address : "undefined" : `${state.multiple.length} accounts`}
+                        </Typography>
+                    </CardContent>
+                    <CardActions>
+                        <Button variant="outlined" color="success" onClick={handleTransfer}>yes, proceed</Button>
+                        <Button variant="outlined" color="error" onClick={handleClose}>No, cancel</Button>
+                    </CardActions>
+                </Card>
+            </Box>
+        )
     }
     return (
 
@@ -248,12 +182,12 @@ export default function MultipleTransferButton(props) {
             <Button
                 sx={{ my: 0.5 }}
                 variant="outlined"
-                size="large"
-                disabled={!(state.single && state.multiple.length > 0 && state.token && (state.amount || state.to_offset || state.from_offset))}
+                size="small"
+                disabled={!(buttonEnable && state.single && state.multiple.length > 0 && state.token && (state.amount || state.to_offset || state.from_offset))}
                 aria-label="transfer icon"
                 onClick={handleOpen}
             >
-                &gt;
+                {buttonText}
             </Button>
             <Popover
                 id={id}
